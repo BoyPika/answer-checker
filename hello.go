@@ -12,45 +12,51 @@ import (
 )
 
 type Alg2 struct {
-	Answer1   string `json:"a"`
-	Answer2   string `json:"b"`
-	Answer3   string `json:"c"`
-	Answer4   string `json:"d"`
-	Answer5   string `json:"e"`
-	Answer6   string `json:"f"`
-	Answer7   string `json:"g"`
-	Answer8   string `json:"h"`
-	Answer9   string `json:"i"`
-	Answer10  string `json:"j"`
-	Answer11  string `json:"k"`
-	Answer12  string `json:"l"`
-	Answer13  string `json:"m"`
-	Answer14  string `json:"n"`
-	Answer15  string `json:"o"`
-	Answer16  string `json:"p"`
-	Answer17  string `json:"q"`
-	Answer18  string `json:"r"`
-	Answer19  string `json:"s"`
-	Answer20  string `json:"t"`
-	Answer21  string `json:"u"`
-	Answer22  string `json:"v"`
-	Answer23  string `json:"w"`
-	Answer24  string `json:"x"`
-	Answer25  string `json:"y"`
-	Answer26  string `json:"z"`
-	Answer27  string `json:"aa"`
-	Answer28  string `json:"ab"`
-	Answer29  string `json:"ac"`
-	Answer30  string `json:"ad"`
-	Answer31  string `json:"ae"`
-	Answer32  string `json:"af"`
-	Answer33  string `json:"ag"`
-	Answer34  string `json:"ah"`
-	Answer35  string `json:"ai"`
-	Answer36  string `json:"aj"`
-	Answer37  string `json:"ak"`
-	Answer38  string `json:"al"`
-	Answer21a string `json:"am"`
+	Answer1  string `json:"a"`
+	Answer2  string `json:"b"`
+	Answer3  string `json:"c"`
+	Answer4  string `json:"d"`
+	Answer5  string `json:"e"`
+	Answer6  string `json:"f"`
+	Answer7  string `json:"g"`
+	Answer8  string `json:"h"`
+	Answer9  string `json:"i"`
+	Answer10 string `json:"j"`
+	Answer11 string `json:"k"`
+	Answer12 string `json:"l"`
+	Answer13 string `json:"m"`
+	Answer14 string `json:"n"`
+	Answer15 string `json:"o"`
+	Answer16 string `json:"p"`
+	Answer17 string `json:"q"`
+	Answer18 string `json:"r"`
+	Answer19 string `json:"s"`
+	Answer20 string `json:"t"`
+	Answer21 string `json:"u"`
+	Answer22 string `json:"v"`
+	Answer23 string `json:"w"`
+	Answer24 string `json:"x"`
+	Answer25 string `json:"y"`
+	Answer26 string `json:"z"`
+	Answer27 string `json:"aa"`
+	Answer28 string `json:"ab"`
+	Answer29 string `json:"ac"`
+	Answer30 string `json:"ad"`
+	Answer31 string `json:"ae"`
+	Answer32 string `json:"af"`
+	Answer33 string `json:"ag"`
+	Answer34 string `json:"ah"`
+	Answer35 string `json:"ai"`
+	Answer36 string `json:"aj"`
+	Answer37 string `json:"ak"`
+	Answer38 string `json:"al"`
+}
+
+type Chem struct {
+	Answer1 string `json:"a"`
+	Answer2 string `json:"b"`
+	Answer3 string `json:"c"`
+	Answer4 string `json:"d"`
 }
 
 func enableCors(w *http.ResponseWriter) {
@@ -58,7 +64,12 @@ func enableCors(w *http.ResponseWriter) {
 }
 
 func main() {
-	http.HandleFunc("/decode", func(w http.ResponseWriter, r *http.Request) {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	http.HandleFunc("/alg2", func(w http.ResponseWriter, r *http.Request) {
 		score := 0
 		question := 0
 		answers := [38]string{
@@ -105,50 +116,203 @@ func main() {
 		enableCors(&w)
 
 		var alg2 Alg2
+		marginCell := 2.
+
+		curtime := time.Now()
+		pdfname := curtime.Format("2006102150405") + ".pdf"
+		pdf := fpdf.New("P", "mm", "Letter", "")
+		pdf.AddPage()
+		pdf.SetFont("Arial", "", 12)
+		pdf.SetTitle("Algebra 2 Practice SOL Results", true)
+		pdf.SetAuthor("SOL Practice Application", true)
+		pdf.SetCreationDate(time.Date(curtime.Year(), curtime.Month(), curtime.Day(), curtime.Hour(), curtime.Minute(), curtime.Second(), curtime.Nanosecond(), time.UTC))
 
 		errr := json.NewDecoder(r.Body).Decode(&alg2)
 		if errr != nil {
 			panic(errr)
 			return
 		}
+		pagew, pageh := pdf.GetPageSize()
+		mleft, mright, _, mbottom := pdf.GetMargins()
+
+		cols := []float64{60, 100, pagew - mleft - mright - 100 - 60}
+		rows := [][]string{}
+		rows = append(rows, []string{"Your Answer", "Correct Answer", ""})
 
 		answered := [38]string{alg2.Answer1, alg2.Answer2, alg2.Answer3, alg2.Answer4, alg2.Answer5, alg2.Answer6, alg2.Answer7, alg2.Answer8, alg2.Answer9, alg2.Answer10, alg2.Answer11, alg2.Answer12, alg2.Answer13, alg2.Answer14, alg2.Answer15, alg2.Answer16, alg2.Answer17, alg2.Answer18, alg2.Answer19, alg2.Answer20, alg2.Answer21, alg2.Answer22, alg2.Answer23, alg2.Answer24, alg2.Answer25, alg2.Answer26, alg2.Answer27, alg2.Answer28, alg2.Answer29, alg2.Answer30, alg2.Answer31, alg2.Answer32, alg2.Answer33, alg2.Answer34, alg2.Answer35, alg2.Answer36, alg2.Answer37, alg2.Answer38}
 		for i := 1; i < 38; i++ {
 			if answered[i] == answers[i] {
+				rows = append(rows, []string{answered[i], answers[i], "Correct"})
 				score++
 				question++
 			} else {
+				rows = append(rows, []string{answered[i], answers[i], "Wrong"})
 				question++
 			}
 		}
 
-		c, ftperr := ftp.Dial("localhost:21", ftp.DialWithTimeout(5*time.Second))
+		for _, row := range rows {
+			_, lineHt := pdf.GetFontSize()
+			height := lineHt + marginCell
+
+			x, y := pdf.GetXY()
+			// add a new page if the height of the row doesn't fit on the page
+			if y+height >= pageh-mbottom {
+				pdf.AddPage()
+				x, y = pdf.GetXY()
+			}
+			if row[2] == "Correct" {
+				pdf.SetFillColor(95, 247, 64)
+			} else if row[2] == "Wrong" {
+				pdf.SetFillColor(255, 69, 56)
+			} else {
+				pdf.SetFillColor(255, 255, 255)
+			}
+			for i, txt := range row {
+				width := cols[i]
+				pdf.Rect(x, y, width, height, "FD")
+				pdf.ClipRect(x, y, width, height, false)
+				pdf.Cell(width, height, txt)
+				pdf.ClipEnd()
+				x += width
+			}
+			pdf.Ln(-1)
+		}
+		c, ftperr := ftp.Dial(os.Getenv("FTP_IP"), ftp.DialWithTimeout(5*time.Second))
 		if ftperr != nil {
-			log.Fatal(ftperr)
+			log.Fatal("ftp failed connection: " + ftperr.Error())
 		}
 
-		ftperr = c.Login("golang", "golang")
+		ftperr = c.Login(os.Getenv("FTP_USER"), os.Getenv("FTP_PASS"))
 		if ftperr != nil {
-			log.Fatal(ftperr)
+			log.Fatal("ftp failed login: " + ftperr.Error())
 		}
-		curtime := time.Now()
-		pdfname := curtime.Format("2006-1-02-15-04-05") + ".pdf"
-		pdf := fpdf.New("P", "mm", "Letter", "")
-		pdf.AddPage()
-		pdf.SetFont("Arial", "", 16)
-		pdf.SetTitle("Algebra 2 Practice SOL Results", true)
-		pdf.SetAuthor("Cody's SOL Practice Application", true)
-		pdf.SetCreationDate(time.Date(curtime.Year(), curtime.Month(), curtime.Day(), curtime.Hour(), curtime.Minute(), curtime.Second(), curtime.Nanosecond(), time.UTC))
+
 		pdferr := pdf.OutputFileAndClose(pdfname)
 		if pdferr != nil {
 			panic(pdferr)
 		}
 
 		localFile, ftperr := os.Open(pdfname)
+
+		ftperr = c.ChangeDir("/htdocs")
 		ftperr = c.Stor(pdfname, localFile)
-		if ftperr != nil {
-			panic(ftperr)
+
+		filecloseerr := localFile.Close()
+		if filecloseerr != nil {
+			panic(filecloseerr)
 		}
+
+		if ftperr := c.Quit(); ftperr != nil {
+			log.Fatal(ftperr)
+		}
+
+		oserr := os.Remove(pdfname)
+		if oserr != nil {
+			panic(oserr)
+		}
+		fmt.Println("PDF Generated as " + pdfname)
+
+		err := json.NewEncoder(w).Encode(score)
+		if err != nil {
+			panic(err)
+			return
+		}
+	})
+
+	http.HandleFunc("/chem", func(w http.ResponseWriter, r *http.Request) {
+		score := 0
+		question := 0
+		answers := [4]string{
+			"1\\%",
+			"\\textnormal{a temperature probe}",
+			"\\textnormal{Double-replacement}",
+			"(2-)",
+		}
+
+		var chem Chem
+		marginCell := 2.
+
+		errr := json.NewDecoder(r.Body).Decode(&chem)
+		if errr != nil {
+			panic(errr)
+			return
+		}
+		enableCors(&w)
+		curtime := time.Now()
+		pdfname := curtime.Format("2006102150405") + ".pdf"
+		pdf := fpdf.New("P", "mm", "Letter", "")
+		pdf.AddPage()
+		pdf.SetFont("Arial", "", 12)
+		pdf.SetTitle("Chemistry Practice SOL Results", true)
+		pdf.SetAuthor("SOL Practice Application", true)
+		pdf.SetCreationDate(time.Date(curtime.Year(), curtime.Month(), curtime.Day(), curtime.Hour(), curtime.Minute(), curtime.Second(), curtime.Nanosecond(), time.UTC))
+		pagew, pageh := pdf.GetPageSize()
+		mleft, mright, _, mbottom := pdf.GetMargins()
+		cols := []float64{60, 100, pagew - mleft - mright - 100 - 60}
+		rows := [][]string{}
+		rows = append(rows, []string{"Your Answer", "Correct Answer", ""})
+
+		answered := [4]string{chem.Answer1, chem.Answer2, chem.Answer3, chem.Answer4}
+		for i := 1; i < 4; i++ {
+			if answered[i] == answers[i] {
+				rows = append(rows, []string{answered[i], answers[i], "Correct"})
+				score++
+				question++
+			} else {
+				rows = append(rows, []string{answered[i], answers[i], "Wrong"})
+				question++
+			}
+		}
+
+		c, ftperr := ftp.Dial(os.Getenv("FTP_IP"), ftp.DialWithTimeout(5*time.Second))
+		if ftperr != nil {
+			log.Fatal("ftp failed connection: " + ftperr.Error())
+		}
+
+		ftperr = c.Login(os.Getenv("FTP_USER"), os.Getenv("FTP_PASS"))
+		if ftperr != nil {
+			log.Fatal("ftp failed login: " + ftperr.Error())
+		}
+
+		for _, row := range rows {
+			curx, y := pdf.GetXY()
+			x := curx
+
+			height := 0.
+			_, lineHt := pdf.GetFontSize()
+
+			for i, txt := range row {
+				lines := pdf.SplitLines([]byte(txt), cols[i])
+				h := float64(len(lines))*lineHt + marginCell*float64(len(lines))
+				if h > height {
+					height = h
+				}
+			}
+
+			if pdf.GetY()+height > pageh-mbottom {
+				pdf.AddPage()
+				y = pdf.GetY()
+			}
+			for i, txt := range row {
+				width := cols[i]
+				pdf.Rect(x, y, width, height, "")
+				pdf.MultiCell(width, lineHt+marginCell, txt, "", "", false)
+				x += width
+				pdf.SetXY(x, y)
+			}
+			pdf.SetXY(curx, y+height)
+		}
+
+		pdferr := pdf.OutputFileAndClose(pdfname)
+		if pdferr != nil {
+			panic(pdferr)
+		}
+
+		localFile, ftperr := os.Open(pdfname)
+
+		ftperr = c.ChangeDir("/htdocs")
+		ftperr = c.Stor(pdfname, localFile)
 
 		filecloseerr := localFile.Close()
 		if filecloseerr != nil {
@@ -172,13 +336,6 @@ func main() {
 			return
 		}
 	})
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8081"
-
-	}
-
 	log.Println("listening on", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
