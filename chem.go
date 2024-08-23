@@ -97,10 +97,8 @@ func chem() {
 				question++
 			}
 		}
-
-		genpdf("Chemistry", rows)
-
-		err := json.NewEncoder(w).Encode(score)
+		resp := Response{Score: score, Pdf: genpdf("Chemistry", rows, "chemistry")}
+		err := json.NewEncoder(w).Encode(resp)
 		if err != nil {
 			panic(err)
 			return

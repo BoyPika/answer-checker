@@ -5,14 +5,16 @@ import (
 	"github.com/go-pdf/fpdf"
 	"github.com/jlaffaye/ftp"
 	"log"
+	"math/rand/v2"
 	"os"
+	"strconv"
 	"time"
 )
 
-func genpdf(title string, rowsa [][]string) {
+var curtime = time.Now()
+
+func genpdf(title string, rowsa [][]string, subject string) (pdfname string) {
 	marginCell := 2.
-	curtime := time.Now()
-	pdfname := curtime.Format("2006102150405") + ".pdf"
 	pdf := fpdf.New("P", "mm", "Letter", "")
 	pdf.AddPage()
 	pdf.SetFont("Arial", "", 12)
@@ -41,7 +43,7 @@ func genpdf(title string, rowsa [][]string) {
 			x, y = pdf.GetXY()
 		}
 		if row[2] == "Correct" {
-			pdf.SetFillColor(95, 247, 64)
+			pdf.SetFillColor(124, 228, 109)
 		} else if row[2] == "Wrong" {
 			pdf.SetFillColor(255, 69, 56)
 		} else {
@@ -67,6 +69,9 @@ func genpdf(title string, rowsa [][]string) {
 		log.Fatal("ftp failed login: " + ftperr.Error())
 	}
 
+	var id = rand.IntN(100000)
+	pdfname = curtime.Format("20061021504") + "-" + strconv.Itoa(id) + ".pdf"
+
 	pdferr := pdf.OutputFileAndClose(pdfname)
 	if pdferr != nil {
 		panic(pdferr)
@@ -74,7 +79,7 @@ func genpdf(title string, rowsa [][]string) {
 
 	localFile, ftperr := os.Open(pdfname)
 
-	ftperr = c.ChangeDir("/htdocs")
+	ftperr = c.ChangeDir("/htdocs/" + subject)
 	ftperr = c.Stor(pdfname, localFile)
 
 	filecloseerr := localFile.Close()
@@ -91,4 +96,5 @@ func genpdf(title string, rowsa [][]string) {
 		panic(oserr)
 	}
 	fmt.Println("PDF Generated as " + pdfname)
+	return
 }

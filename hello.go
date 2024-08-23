@@ -6,6 +6,11 @@ import (
 	"os"
 )
 
+type Response struct {
+	Score int    `json:"score"`
+	Pdf   string `json:"pdf"`
+}
+
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }

@@ -113,10 +113,8 @@ func alg2() {
 				question++
 			}
 		}
-
-		genpdf("Algebra 2", rows)
-
-		err := json.NewEncoder(w).Encode(score)
+		resp := Response{Score: score, Pdf: genpdf("Algebra 2", rows, "algebra2")}
+		err := json.NewEncoder(w).Encode(resp)
 		if err != nil {
 			panic(err)
 			return
