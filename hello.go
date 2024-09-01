@@ -24,6 +24,10 @@ func main() {
 	chem()
 	alg1()
 	grd8mth()
+	civics()
+	vastud()
+	worldgeo()
+	grd3hist()
 	log.Println("listening on", port)
 	log.Println(http.ListenAndServe(":"+port, nil))
 }
