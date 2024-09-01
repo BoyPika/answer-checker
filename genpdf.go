@@ -3,17 +3,14 @@ package main
 import (
 	"fmt"
 	"github.com/go-pdf/fpdf"
-	"github.com/jlaffaye/ftp"
-	"log"
 	"math/rand/v2"
-	"os"
 	"strconv"
 	"time"
 )
 
 var curtime = time.Now()
 
-func genpdf(title string, rowsa [][]string, subject string) (pdfname string) {
+func genpdf(title string, rowsa [][]string, subject string, name string, score int, max int) (pdfname string) {
 	marginCell := 2.
 	pdf := fpdf.New("P", "mm", "Letter", "")
 	pdf.AddPage()
@@ -25,6 +22,11 @@ func genpdf(title string, rowsa [][]string, subject string) (pdfname string) {
 	mleft, mright, _, mbottom := pdf.GetMargins()
 	cols := []float64{60, 100, pagew - mleft - mright - 100 - 60}
 	rows := [][]string{}
+	if name == "" || name == " " {
+		rows = append(rows, []string{"", "Score: " + strconv.Itoa(score) + "/" + strconv.Itoa(max), curtime.Format("January 02, 2006")})
+	} else {
+		rows = append(rows, []string{"Name: " + name, "Score: " + strconv.Itoa(score) + "/" + strconv.Itoa(max), curtime.Format("January 02, 2006")})
+	}
 	rows = append(rows, []string{"Your Answer", "Correct Answer", ""})
 
 	rown := 0
@@ -59,15 +61,15 @@ func genpdf(title string, rowsa [][]string, subject string) (pdfname string) {
 		}
 		pdf.Ln(-1)
 	}
-	c, ftperr := ftp.Dial(os.Getenv("FTP_IP"), ftp.DialWithTimeout(5*time.Second))
-	if ftperr != nil {
-		log.Fatal("ftp failed connection: " + ftperr.Error())
-	}
+	//c, ftperr := ftp.Dial(os.Getenv("FTP_IP"), ftp.DialWithTimeout(5*time.Second))
+	//if ftperr != nil {
+	//	log.Fatal("ftp failed connection: " + ftperr.Error())
+	//}
 
-	ftperr = c.Login(os.Getenv("FTP_USER"), os.Getenv("FTP_PASS"))
-	if ftperr != nil {
-		log.Fatal("ftp failed login: " + ftperr.Error())
-	}
+	//ftperr = c.Login(os.Getenv("FTP_USER"), os.Getenv("FTP_PASS"))
+	//if ftperr != nil {
+	//	log.Fatal("ftp failed login: " + ftperr.Error())
+	//}
 
 	var id = rand.IntN(100000)
 	pdfname = curtime.Format("20061021504") + "-" + strconv.Itoa(id) + ".pdf"
@@ -77,24 +79,24 @@ func genpdf(title string, rowsa [][]string, subject string) (pdfname string) {
 		panic(pdferr)
 	}
 
-	localFile, ftperr := os.Open(pdfname)
+	//localFile, ftperr := os.Open(pdfname)
 
-	ftperr = c.ChangeDir("/htdocs/" + subject)
-	ftperr = c.Stor(pdfname, localFile)
+	//ftperr = c.ChangeDir("/htdocs/" + subject)
+	//ftperr = c.Stor(pdfname, localFile)
 
-	filecloseerr := localFile.Close()
-	if filecloseerr != nil {
-		panic(filecloseerr)
-	}
+	//filecloseerr := localFile.Close()
+	//if filecloseerr != nil {
+	//	panic(filecloseerr)
+	//}
 
-	if ftperr := c.Quit(); ftperr != nil {
-		log.Fatal(ftperr)
-	}
+	//if ftperr := c.Quit(); ftperr != nil {
+	//	log.Fatal(ftperr)
+	//}
 
-	oserr := os.Remove(pdfname)
-	if oserr != nil {
-		panic(oserr)
-	}
+	//oserr := os.Remove(pdfname)
+	//if oserr != nil {
+	//	panic(oserr)
+	//}
 	fmt.Println("PDF Generated as " + pdfname)
 	return
 }

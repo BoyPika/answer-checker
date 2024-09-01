@@ -22,6 +22,8 @@ func main() {
 	}
 	alg2()
 	chem()
+	alg1()
+	grd8mth()
 	log.Println("listening on", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Println(http.ListenAndServe(":"+port, nil))
 }

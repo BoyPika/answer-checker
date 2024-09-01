@@ -44,6 +44,7 @@ type Alg2 struct {
 	Answer36 string `json:"aj"`
 	Answer37 string `json:"ak"`
 	Answer38 string `json:"al"`
+	Name     string `json:"name"`
 }
 
 func alg2() {
@@ -113,7 +114,7 @@ func alg2() {
 				question++
 			}
 		}
-		resp := Response{Score: score, Pdf: genpdf("Algebra 2", rows, "algebra2")}
+		resp := Response{Score: score, Pdf: genpdf("Algebra 2", rows, "algebra2", alg2.Name, score, question)}
 		err := json.NewEncoder(w).Encode(resp)
 		if err != nil {
 			panic(err)

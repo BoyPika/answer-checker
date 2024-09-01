@@ -52,6 +52,7 @@ type Chem struct {
 	Answer44 string `json:"ar"`
 	Answer45 string `json:"as"`
 	Answer46 string `json:"at"`
+	Name     string `json:"name"`
 }
 
 func chem() {
@@ -97,7 +98,7 @@ func chem() {
 				question++
 			}
 		}
-		resp := Response{Score: score, Pdf: genpdf("Chemistry", rows, "chemistry")}
+		resp := Response{Score: score, Pdf: genpdf("Chemistry", rows, "chemistry", chem.Name, score, question)}
 		err := json.NewEncoder(w).Encode(resp)
 		if err != nil {
 			panic(err)
